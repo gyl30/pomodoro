@@ -5,7 +5,9 @@
 #include <QCloseEvent>
 #include <QLabel>
 #include <QMenu>
+#include <QPropertyAnimation>
 #include <QMessageBox>
+#include <QPainter>
 #include <QPushButton>
 #include <QScreen>
 #include <QSpinBox>
@@ -81,7 +83,10 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     connect(tray_, &QSystemTrayIcon::activated, this, &Widget::trayClicked, Qt::UniqueConnection);
     connect(exit_action, &QAction::triggered, qApp, &QCoreApplication::quit);
     connect(open_action, &QAction::triggered, this, [this]() { this->show(); });
-    tray_->setIcon(style()->standardIcon(QStyle::SP_ComputerIcon));
+    heartbeat_timer_ = new QTimer(this);
+    heartbeat_timer_->start(1500);
+    connect(heartbeat_timer_, &QTimer::timeout, this, &Widget::updateHeartbeat);
+    updateHeartbeat();
     tray_->setVisible(true);
     tray_->show();
 
@@ -90,19 +95,18 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
 
     tooltip_update_timer_ = new QTimer(this);
     connect(tooltip_update_timer_, &QTimer::timeout, this, &Widget::updateTrayToolTip);
-    tooltip_update_timer_->start(1000);
-    hue_ = 180;    // 起始色相，可以改为你喜欢的颜色起点
-    // 创建动画 timer
+    tooltip_update_timer_->start(500);
+    hue_ = 180;
     background_animation_timer_ = new QTimer(this);
     connect(background_animation_timer_, &QTimer::timeout, this, &Widget::updateBackgroundGradient);
-    background_animation_timer_->start(50);    // 每 50ms 更新一次
+    background_animation_timer_->start(50);
     connect(start_button_, &QPushButton::clicked, this, &Widget::startTimer);
     setFixedSize(300, 150);
     move(screenCenter());
 }
 void Widget::updateTrayToolTip()
 {
-    int remaining_ms = timer_->remainingTime();    // 毫秒
+    int remaining_ms = timer_->remainingTime();
     if (remaining_ms > 0)
     {
         int seconds = remaining_ms / 1000;
@@ -112,6 +116,37 @@ void Widget::updateTrayToolTip()
         QString tip = QString("距离提醒还有：%1分%2秒").arg(minutes).arg(secs, 2, 10, QChar('0'));
         tray_->setToolTip(tip);
     }
+}
+void Widget::updateHeartbeat()
+{
+    auto *animation = new QPropertyAnimation(this, "scaleFactor");
+    animation->setDuration(1000);
+    animation->setKeyValueAt(0, 1.0);
+    animation->setKeyValueAt(0.2, 0.8);
+    animation->setKeyValueAt(1.0, 1.0);
+    connect(animation, &QPropertyAnimation::valueChanged, this, &Widget::updateIcon);
+    animation->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+void Widget::updateIcon()
+{
+    // 绘制心形图标
+    QPixmap pixmap(32, 32);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+
+    // 设置支持Emoji的字体
+    painter.setFont(QFont("Segoe UI Emoji", 24 * scaleFactor));
+
+    // 动态调整颜色（从浅红到深红）
+    QColor heartColor = QColor::fromHslF(0, 1.0, 0.5 + ((scaleFactor - 0.8) * 0.25));
+    painter.setPen(heartColor);
+
+    // 绘制心形Emoji
+    painter.drawText(pixmap.rect(), Qt::AlignCenter, "❤️");
+
+    // 更新托盘图标
+    tray_->setIcon(QIcon(pixmap));
 }
 void Widget::startTimer()
 {
@@ -148,10 +183,10 @@ QPoint Widget::screenCenter()
 }
 void Widget::updateBackgroundGradient()
 {
-    hue_ = (hue_ + 1) % 360;    // hue 范围 [0, 359]
+    hue_ = (hue_ + 1) % 360;
 
     QColor color1 = QColor::fromHsv(hue_, 100, 255);
-    QColor color2 = QColor::fromHsv((hue_ + 60) % 360, 100, 255);    // 第二个颜色差一点，产生流动感
+    QColor color2 = QColor::fromHsv((hue_ + 60) % 360, 100, 255);
 
     QPalette palette;
     QLinearGradient gradient(0, 0, 0, height());
