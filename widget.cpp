@@ -2,7 +2,6 @@
 #include "message_box.h"
 #include <QAction>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QCloseEvent>
 #include <QLabel>
 #include <QMenu>
