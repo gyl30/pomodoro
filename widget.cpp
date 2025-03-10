@@ -9,6 +9,8 @@
 #include <QPushButton>
 #include <QScreen>
 #include <QSpinBox>
+#include <QPalette>
+#include <QLinearGradient>
 #include <QStyle>
 #include <QSystemTrayIcon>
 #include <QTimer>
@@ -25,9 +27,20 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
 
     time_spinbox_ = new QSpinBox(this);
     time_spinbox_->setStyleSheet(
-        "font-size: 14px; padding: 8px; border: 2px "
-        "solid #4CAF50; border-radius: 5px;");
-    time_spinbox_->setRange(1, 3600);    // 设置时间范围 1 到 3600 秒
+        "QSpinBox {"
+        "    font-size: 16px; padding: 6px 10px; border: 2px solid #4CAF50; border-radius: 8px;"
+        "    background-color: #ffffff; color: #333;"
+        "}"
+        "QSpinBox::up-button, QSpinBox::down-button {"
+        "    width: 0px;"
+        "    background-color: #e0f7fa;"
+        "    border-radius: 4px;"
+        "}"
+        "QSpinBox::up-arrow, QSpinBox::down-arrow {"
+        "    width: 10px; height: 10px;"
+        "}");
+    time_spinbox_->setRange(5, 3600);    // 设置时间范围 5 到 3600 秒
+    time_spinbox_->setSingleStep(5);
     layout->addWidget(time_spinbox_);
 
     start_button_ = new QPushButton("开始计时", this);
@@ -49,6 +62,14 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
 
     setLayout(layout);
 
+    // 设置背景渐变色
+    QPalette palette;
+    QLinearGradient gradient(0, 0, 0, height());    // 从上到下渐变
+    gradient.setColorAt(0.0, QColor("#fefcea"));    // 起始颜色（淡蓝）
+    gradient.setColorAt(1.0, QColor("#f1da36"));    // 结束颜色（浅青）
+    palette.setBrush(QPalette::Window, gradient);
+    setAutoFillBackground(true);
+    setPalette(palette);
     // 创建托盘图标（使用系统默认图标）
     tray_ = new QSystemTrayIcon(nullptr);
     auto *tray_menu = new QMenu(this);
@@ -70,7 +91,11 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     tooltip_update_timer_ = new QTimer(this);
     connect(tooltip_update_timer_, &QTimer::timeout, this, &Widget::updateTrayToolTip);
     tooltip_update_timer_->start(1000);
-
+    hue_ = 180;    // 起始色相，可以改为你喜欢的颜色起点
+    // 创建动画 timer
+    background_animation_timer_ = new QTimer(this);
+    connect(background_animation_timer_, &QTimer::timeout, this, &Widget::updateBackgroundGradient);
+    background_animation_timer_->start(50);    // 每 50ms 更新一次
     connect(start_button_, &QPushButton::clicked, this, &Widget::startTimer);
     setFixedSize(300, 150);
     move(screenCenter());
@@ -120,6 +145,21 @@ QPoint Widget::screenCenter()
     int x = screen_geometry.center().x() - (width() / 2);
     int y = screen_geometry.center().y() - (height() / 2);
     return {x, y};
+}
+void Widget::updateBackgroundGradient()
+{
+    hue_ = (hue_ + 1) % 360;    // hue 范围 [0, 359]
+
+    QColor color1 = QColor::fromHsv(hue_, 100, 255);
+    QColor color2 = QColor::fromHsv((hue_ + 60) % 360, 100, 255);    // 第二个颜色差一点，产生流动感
+
+    QPalette palette;
+    QLinearGradient gradient(0, 0, 0, height());
+    gradient.setColorAt(0.0, color1);
+    gradient.setColorAt(1.0, color2);
+
+    palette.setBrush(QPalette::Window, gradient);
+    setPalette(palette);
 }
 void Widget::showTrayNotification()
 {

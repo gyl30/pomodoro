@@ -22,6 +22,7 @@ class Widget : public QWidget
     void startTimer();
     void stopTimer();
     void showTrayNotification();
+    void updateBackgroundGradient();
     void trayClicked(QSystemTrayIcon::ActivationReason);
     void updateTrayToolTip();
 
@@ -32,6 +33,8 @@ class Widget : public QWidget
     QTimer *timer_ = nullptr;
     QSystemTrayIcon *tray_ = nullptr;
     QTimer *tooltip_update_timer_;
+    QTimer *background_animation_timer_;
+    int hue_;
     QSpinBox *time_spinbox_ = nullptr;
     QPushButton *start_button_ = nullptr;
 };
