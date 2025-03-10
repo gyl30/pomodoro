@@ -15,15 +15,13 @@ class Widget : public QWidget
     explicit Widget(QWidget *parent = nullptr);
     ~Widget() override = default;
 
-    // public:
-    //  void closeEvent(QCloseEvent *event) override;
-    //  void hideEvent(QHideEvent *event) override;
    private slots:
     void startTimer();
     void stopTimer();
     void showTrayNotification();
     void updateBackgroundGradient();
     void trayClicked(QSystemTrayIcon::ActivationReason);
+    void updateHeartbeat();
     void updateTrayToolTip();
     // 定义scaleFactor属性
    public:
@@ -33,14 +31,19 @@ class Widget : public QWidget
         updateIcon();
     }
 
-    qreal getScaleFactor() const { return scaleFactor; }
+    [[nodiscard]] qreal getScaleFactor() const { return scaleFactor; }
 
    private:
     void updateIcon();
-    void updateHeartbeat();
-    QPoint screenCenter();
+
+   public:
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseDoubleClickEvent(QMouseEvent *e) override;
 
    private:
+    QPoint click_pos_;
+    QPoint center_pos_;
     QTimer *timer_ = nullptr;
     QSystemTrayIcon *tray_ = nullptr;
     QTimer *tooltip_update_timer_;

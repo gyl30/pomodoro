@@ -18,20 +18,39 @@
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QDebug>
+
+static QPoint screenCenter()
+{
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (screen == nullptr)
+    {
+        return {0, 0};
+    }
+    QRect screen_geometry = screen->availableGeometry();
+    int x = screen_geometry.center().x();
+    int y = screen_geometry.center().y();
+    return {x, y};
+}
 
 Widget::Widget(QWidget *parent) : QWidget(parent)
 {
-    auto *layout = new QVBoxLayout(this);
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
 
+    auto *layout = new QVBoxLayout(this);
     auto *label = new QLabel("设置时间间隔 (分钟):", this);
     label->setStyleSheet("font-size: 16px; color: #333; margin-bottom: 10px;");
     layout->addWidget(label);
 
     time_spinbox_ = new QSpinBox(this);
+    QFont font = time_spinbox_->font();
+    font.setPointSize(14);    // 设置字体大小，与 label 协调
+    time_spinbox_->setFont(font);
     time_spinbox_->setStyleSheet(
         "QSpinBox {"
-        "    font-size: 16px; padding: 6px 10px; border: 2px solid #4CAF50; border-radius: 8px;"
+        "    padding: 6px 10px; border: 2px solid #4CAF50; border-radius: 8px;"
         "    background-color: #ffffff; color: #333;"
+        "    min-height: 30px;"    // 确保高度足够
         "}"
         "QSpinBox::up-button, QSpinBox::down-button {"
         "    width: 0px;"
@@ -41,7 +60,7 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
         "QSpinBox::up-arrow, QSpinBox::down-arrow {"
         "    width: 10px; height: 10px;"
         "}");
-    time_spinbox_->setRange(5, 3600);    // 设置时间范围 5 到 3600 秒
+    time_spinbox_->setRange(1, 60);    // 设置时间范围 1 到 60 分钟
     time_spinbox_->setSingleStep(5);
     layout->addWidget(time_spinbox_);
 
@@ -102,7 +121,8 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     background_animation_timer_->start(50);
     connect(start_button_, &QPushButton::clicked, this, &Widget::startTimer);
     setFixedSize(300, 150);
-    move(screenCenter());
+    center_pos_ = screenCenter();
+    move(center_pos_);
 }
 void Widget::updateTrayToolTip()
 {
@@ -168,18 +188,10 @@ void Widget::trayClicked(QSystemTrayIcon::ActivationReason reason)
     }
     if (reason == QSystemTrayIcon::DoubleClick || reason == QSystemTrayIcon::Trigger)
     {
-        move(screenCenter());
+        move(center_pos_);
         showNormal();
         activateWindow();
     }
-}
-QPoint Widget::screenCenter()
-{
-    QScreen *screen = this->screen();
-    QRect screen_geometry = screen->availableGeometry();
-    int x = screen_geometry.center().x() - (width() / 2);
-    int y = screen_geometry.center().y() - (height() / 2);
-    return {x, y};
 }
 void Widget::updateBackgroundGradient()
 {
@@ -198,10 +210,29 @@ void Widget::updateBackgroundGradient()
 }
 void Widget::showTrayNotification()
 {
-    stopTimer();
     CustomMessageBox msg_box(this);
-    auto pos = screenCenter();
-    msg_box.move(pos);
+    msg_box.move(center_pos_);
     msg_box.exec();
-    startTimer();
+}
+void Widget::mousePressEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::LeftButton)
+    {
+        click_pos_ = e->pos();
+    }
+}
+void Widget::mouseMoveEvent(QMouseEvent *e)
+{
+    if ((e->buttons() & Qt::LeftButton) != 0U)
+    {
+        move(e->pos() + pos() - click_pos_);
+    }
+}
+void Widget::mouseDoubleClickEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::LeftButton)
+    {
+        hide();
+    }
+    QWidget::mouseDoubleClickEvent(e);
 }
