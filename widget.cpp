@@ -19,7 +19,7 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
 {
     auto *layout = new QVBoxLayout(this);
 
-    auto *label = new QLabel("设置时间间隔 (秒):", this);
+    auto *label = new QLabel("设置时间间隔 (分钟):", this);
     label->setStyleSheet("font-size: 16px; color: #333; margin-bottom: 10px;");
     layout->addWidget(label);
 
@@ -77,7 +77,7 @@ void Widget::startTimer()
     {
         this->hide();
     }
-    int interval = time_spinbox_->value() * 1000;
+    int interval = time_spinbox_->value() * 1000* 60;
     timer_->start(interval);
 }
 
