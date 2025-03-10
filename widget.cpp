@@ -2,6 +2,7 @@
 #include "message_box.h"
 #include <QAction>
 #include <QApplication>
+#include <QDesktopWidget>
 #include <QCloseEvent>
 #include <QLabel>
 #include <QMenu>
@@ -50,17 +51,20 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     setLayout(layout);
 
     // 创建托盘图标（使用系统默认图标）
-    tray_ = new QSystemTrayIcon(this);
-    tray_->setIcon(style()->standardIcon(QStyle::SP_ComputerIcon));
-    tray_->setVisible(true);
-    tray_->show();
-
+    tray_ = new QSystemTrayIcon(nullptr);
     auto *tray_menu = new QMenu(this);
     auto *exit_action = new QAction("退出", this);
+    auto *open_action = new QAction("启动器", this);
+    tray_menu->addAction(open_action);
     tray_menu->addAction(exit_action);
     tray_->setContextMenu(tray_menu);
     connect(tray_, &QSystemTrayIcon::activated, this, &Widget::tray_clicked, Qt::UniqueConnection);
     connect(exit_action, &QAction::triggered, qApp, &QCoreApplication::quit);
+    connect(open_action, &QAction::triggered, this, [this]() { this->show(); });
+    tray_->setIcon(style()->standardIcon(QStyle::SP_ComputerIcon));
+    tray_->setVisible(true);
+    tray_->show();
+
 
     timer_ = new QTimer(this);
     connect(timer_, &QTimer::timeout, this, &Widget::showTrayNotification);
@@ -82,15 +86,14 @@ void Widget::stopTimer() { timer_->stop(); }
 
 void Widget::tray_clicked(QSystemTrayIcon::ActivationReason reason)
 {
-    if (reason == QSystemTrayIcon::DoubleClick && this->isHidden())
+    if (!this->isHidden())
     {
-        auto pos = screenCenter();
-        // 重新设置窗口标志，确保窗口能正常显示
-        setWindowFlags(Qt::Window);
-        showNormal();        // 让窗口回到正常状态
-        activateWindow();    // 让窗口获得焦点
-        raise();             // 提升窗口到前台
-        move(pos);
+        return;
+    }
+    if (reason == QSystemTrayIcon::DoubleClick || reason == QSystemTrayIcon::Trigger)
+    {
+        showNormal();
+        activateWindow();
     }
 }
 QPoint Widget::screenCenter()
