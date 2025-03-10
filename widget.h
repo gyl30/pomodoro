@@ -15,19 +15,23 @@ class Widget : public QWidget
     explicit Widget(QWidget *parent = nullptr);
     ~Widget() override = default;
 
-   // public:
-   //  void closeEvent(QCloseEvent *event) override;
-   //  void hideEvent(QHideEvent *event) override;
+    // public:
+    //  void closeEvent(QCloseEvent *event) override;
+    //  void hideEvent(QHideEvent *event) override;
    private slots:
     void startTimer();
     void stopTimer();
     void showTrayNotification();
-    void tray_clicked(QSystemTrayIcon::ActivationReason);
+    void trayClicked(QSystemTrayIcon::ActivationReason);
+    void updateTrayToolTip();
+
    private:
     QPoint screenCenter();
+
    private:
     QTimer *timer_ = nullptr;
     QSystemTrayIcon *tray_ = nullptr;
+    QTimer *tooltip_update_timer_;
     QSpinBox *time_spinbox_ = nullptr;
     QPushButton *start_button_ = nullptr;
 };

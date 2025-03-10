@@ -57,7 +57,7 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     tray_menu->addAction(open_action);
     tray_menu->addAction(exit_action);
     tray_->setContextMenu(tray_menu);
-    connect(tray_, &QSystemTrayIcon::activated, this, &Widget::tray_clicked, Qt::UniqueConnection);
+    connect(tray_, &QSystemTrayIcon::activated, this, &Widget::trayClicked, Qt::UniqueConnection);
     connect(exit_action, &QAction::triggered, qApp, &QCoreApplication::quit);
     connect(open_action, &QAction::triggered, this, [this]() { this->show(); });
     tray_->setIcon(style()->standardIcon(QStyle::SP_ComputerIcon));
@@ -67,9 +67,26 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     timer_ = new QTimer(this);
     connect(timer_, &QTimer::timeout, this, &Widget::showTrayNotification);
 
+    tooltip_update_timer_ = new QTimer(this);
+    connect(tooltip_update_timer_, &QTimer::timeout, this, &Widget::updateTrayToolTip);
+    tooltip_update_timer_->start(1000);
+
     connect(start_button_, &QPushButton::clicked, this, &Widget::startTimer);
     setFixedSize(300, 150);
     move(screenCenter());
+}
+void Widget::updateTrayToolTip()
+{
+    int remaining_ms = timer_->remainingTime();    // 毫秒
+    if (remaining_ms > 0)
+    {
+        int seconds = remaining_ms / 1000;
+        int minutes = seconds / 60;
+        int secs = seconds % 60;
+
+        QString tip = QString("距离提醒还有：%1分%2秒").arg(minutes).arg(secs, 2, 10, QChar('0'));
+        tray_->setToolTip(tip);
+    }
 }
 void Widget::startTimer()
 {
@@ -83,7 +100,7 @@ void Widget::startTimer()
 
 void Widget::stopTimer() { timer_->stop(); }
 
-void Widget::tray_clicked(QSystemTrayIcon::ActivationReason reason)
+void Widget::trayClicked(QSystemTrayIcon::ActivationReason reason)
 {
     if (!this->isHidden())
     {
