@@ -64,12 +64,12 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     tray_->setVisible(true);
     tray_->show();
 
-
     timer_ = new QTimer(this);
     connect(timer_, &QTimer::timeout, this, &Widget::showTrayNotification);
 
     connect(start_button_, &QPushButton::clicked, this, &Widget::startTimer);
     setFixedSize(300, 150);
+    move(screenCenter());
 }
 void Widget::startTimer()
 {
@@ -77,7 +77,7 @@ void Widget::startTimer()
     {
         this->hide();
     }
-    int interval = time_spinbox_->value() * 1000* 60;
+    int interval = time_spinbox_->value() * 1000 * 60;
     timer_->start(interval);
 }
 
@@ -91,6 +91,7 @@ void Widget::tray_clicked(QSystemTrayIcon::ActivationReason reason)
     }
     if (reason == QSystemTrayIcon::DoubleClick || reason == QSystemTrayIcon::Trigger)
     {
+        move(screenCenter());
         showNormal();
         activateWindow();
     }
