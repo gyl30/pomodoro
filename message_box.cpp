@@ -4,6 +4,9 @@
 #include <QStyle>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QTimer>
+#include <QPropertyAnimation>
+#include <QColor>
 #include <QMessageBox>
 #include "message_box.h"
 
@@ -36,6 +39,30 @@ CustomMessageBox::CustomMessageBox(QWidget *parent) : QDialog(parent)
     layout->addWidget(label);
     layout->addWidget(confirm);
     connect(confirm, &QPushButton::clicked, this, &QDialog::accept);
+
+    // 初始化背景渐变动画
+    hue_ = 180;                     // 初始色调，与 Widget 一致
+    setAutoFillBackground(true);    // 启用背景自动填充
+    updateBackgroundGradient();     // 设置初始背景
+
+    animation_timer_ = new QTimer(this);
+    connect(animation_timer_, &QTimer::timeout, this, &CustomMessageBox::updateBackgroundGradient);
+    animation_timer_->start(50);    // 每 50ms 更新一次，与 Widget 一致
+}
+void CustomMessageBox::updateBackgroundGradient()
+{
+    hue_ = (hue_ + 1) % 360;    // 色调循环
+
+    QColor color1 = QColor::fromHsv(hue_, 100, 255);                 // 顶部颜色
+    QColor color2 = QColor::fromHsv((hue_ + 60) % 360, 100, 255);    // 底部颜色
+
+    QPalette palette;
+    QLinearGradient gradient(0, 0, 0, height());    // 从上到下渐变
+    gradient.setColorAt(0.0, color1);
+    gradient.setColorAt(1.0, color2);
+
+    palette.setBrush(QPalette::Window, gradient);
+    setPalette(palette);
 }
 
 void CustomMessageBox::mousePressEvent(QMouseEvent *e)
