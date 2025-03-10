@@ -32,7 +32,29 @@ static QPoint screenCenter()
     int y = screen_geometry.center().y();
     return {x, y};
 }
+class CustomSpinBox : public QSpinBox
+{
+   public:
+    explicit CustomSpinBox(QWidget *parent = nullptr) : QSpinBox(parent) {}
 
+   protected:
+    void wheelEvent(QWheelEvent *event) override
+    {
+        int step = singleStep();
+        int val = value();
+        int base = (val / step) * step;
+
+        if (event->angleDelta().y() > 0)
+        {
+            setValue(base + step);
+        }
+        else
+        {
+            setValue(base - step);
+        }
+        event->accept();
+    }
+};
 Widget::Widget(QWidget *parent) : QWidget(parent)
 {
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
@@ -42,9 +64,10 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
     label->setStyleSheet("font-size: 16px; color: #333; margin-bottom: 10px;");
     layout->addWidget(label);
 
-    time_spinbox_ = new QSpinBox(this);
+    time_spinbox_ = new CustomSpinBox(this);
     QFont font = time_spinbox_->font();
     font.setPointSize(14);    // 设置字体大小，与 label 协调
+    time_spinbox_->setSingleStep(5);
     time_spinbox_->setFont(font);
     time_spinbox_->setStyleSheet(
         "QSpinBox {"
