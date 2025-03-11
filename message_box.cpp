@@ -45,9 +45,12 @@ CustomMessageBox::CustomMessageBox(QWidget *parent) : QDialog(parent)
     setAutoFillBackground(true);    // 启用背景自动填充
     updateBackgroundGradient();     // 设置初始背景
 
-    animation_timer_ = new QTimer(this);
-    connect(animation_timer_, &QTimer::timeout, this, &CustomMessageBox::updateBackgroundGradient);
-    animation_timer_->start(50);    // 每 50ms 更新一次，与 Widget 一致
+    // animation_timer_ = new QTimer(this);
+    // connect(animation_timer_, &QTimer::timeout, this, &CustomMessageBox::updateBackgroundGradient);
+    // animation_timer_->start(50);    // 每 50ms 更新一次，与 Widget 一致
+    gl_background_ = new GLBackgroundWidget(this);
+    gl_background_->setGeometry(0, 0, width(), height());
+    gl_background_->lower();
 }
 void CustomMessageBox::updateBackgroundGradient()
 {

@@ -13,8 +13,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets)
 
 set(WIN32_FLAG "")
 if(MSVC)
@@ -25,9 +25,10 @@ add_executable(pomodoro ${WIN32_FLAG}
     main.cpp 
     widget.cpp
     message_box.cpp
+    glbackgroundwidget.cpp
 )
 
-target_link_libraries(pomodoro Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(pomodoro Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
 if(PRODUCTION_OPTIMIZATION)
     if(MSVC)
         target_compile_options(pomodoro PRIVATE /O2 /Ob2 /Oi /Ot)

@@ -41,7 +41,7 @@ jobs:
           dir
           dir .\release
           dir .\debug
-          windeployqt release\${{ env.executable }}.exe --release --no-translations --no-opengl-sw --no-system-d3d-compiler --no-compiler-runtime --dir packet
+          windeployqt release\${{ env.executable }}.exe --release --no-translations --no-system-d3d-compiler --no-compiler-runtime --dir packet
           dir .\packet
       - name: packet
         id: packet
@@ -107,7 +107,7 @@ jobs:
           where.exe nmake
           dir .\build
           dir .\build\Release
-          windeployqt .\build\Release\${{ env.executable }}.exe --release --no-translations --no-opengl-sw --no-system-d3d-compiler --no-compiler-runtime --dir .\build\Release\
+          windeployqt .\build\Release\${{ env.executable }}.exe --release --no-translations --no-system-d3d-compiler --no-compiler-runtime --dir .\build\Release\
           dir .\build\Release
           Compress-Archive -Path .\build\Release\*   ${{ env.executable }}-win64_msvc2022_64-6.8.1'.zip'
           dir

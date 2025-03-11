@@ -1,5 +1,6 @@
 #include "widget.h"
 #include "message_box.h"
+#include "glbackgroundwidget.h"
 #include <QAction>
 #include <QApplication>
 #include <QCloseEvent>
@@ -106,14 +107,6 @@ Widget::Widget(QWidget *parent) : QWidget(parent)
 
     setLayout(layout);
 
-    // 设置背景渐变色
-    QPalette palette;
-    QLinearGradient gradient(0, 0, 0, height());    // 从上到下渐变
-    gradient.setColorAt(0.0, QColor("#fefcea"));    // 起始颜色（淡蓝）
-    gradient.setColorAt(1.0, QColor("#f1da36"));    // 结束颜色（浅青）
-    palette.setBrush(QPalette::Window, gradient);
-    setAutoFillBackground(true);
-    setPalette(palette);
     // 创建托盘图标（使用系统默认图标）
     tray_ = new QSystemTrayIcon(nullptr);
     auto *tray_menu = new QMenu(this);
@@ -220,11 +213,15 @@ void Widget::updateBackgroundGradient()
 {
     hue_ = (hue_ + 1) % 360;
 
-    QColor color1 = QColor::fromHsv(hue_, 100, 255);
-    QColor color2 = QColor::fromHsv((hue_ + 60) % 360, 100, 255);
+    QColor color1 = QColor::fromHsv(hue_, 150, 255);
+    QColor color2 = QColor::fromHsv((hue_ + 60) % 360, 150, 255);
+
+    // 创建渐变位置也动态变化
+    static int offset = 0;
+    offset = (offset + 1) % width();    // 或使用 height() 更换方向
 
     QPalette palette;
-    QLinearGradient gradient(0, 0, 0, height());
+    QLinearGradient gradient(0, 0, offset, height());    // 渐变方向横向“滑动”
     gradient.setColorAt(0.0, color1);
     gradient.setColorAt(1.0, color2);
 
